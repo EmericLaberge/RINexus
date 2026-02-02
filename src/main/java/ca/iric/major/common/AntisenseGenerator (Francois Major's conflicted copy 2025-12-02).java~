@@ -1,0 +1,41 @@
+/*
+ * Copyright (c) 2025 François Major, Major Lab (Université de Montréal)
+ * Licensed under the MIT License. See LICENSE file in the project root for details.
+ */
+
+package ca.iric.major.common;
+
+/**
+ * Antisense genertor produces a String generator for antisense with 4-nt and 3-nt grips for, respectively, seed and supp.
+ *    this generator is lazy and cheap (does not generate all possible sequences), keeps one sequence at a time.
+ *
+ * @version 1.0
+ * @author Francois Major
+ * @copyright 1.0 2025 - MajorLab, IRIC, Universite de Montreal
+ * @license MIT
+*/
+
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.function.Predicate;
+
+/**
+ * AntisenseGenerator
+ *
+ * Generates antisense (guide) RNA sequences of length 21 nt with the following layout:
+ *
+ *  g1         = C
+ *  g2–g5      = 4-nt seed grip (already reverse-complemented and passed in as argument)
+ *  g6–g8      = fully sampled (A,C,G,U)
+ *  g9–g12     = fixed central region "UUAA"
+ *  g13–g15    = 3-nt supplementary grip (already reverse-complemented and passed as argument)
+ *  g16–g17    = fully sampled (A,C,G,U)
+ *  g18–g21    = fixed tail "AAUU"
+ *
+ * Free positions: g6,g7,g8,g16,g17 (5 positions, 4 nucleotides each) → 4^5 = 1024 sequences max.
+ *
+ * The generator is lazy: it only constructs the next sequence on demand, and at most one
+ * candidate is stored in memory at a time. A Predicate<String> filter is applied on each
+ * candidate; only sequences passing the filter are returned.
+ */
+

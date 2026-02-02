@@ -1,0 +1,31 @@
+package ca.iric.major.common;
+
+import java.util.List;
+import java.io.Serializable;
+
+public class EightMerDuplex implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    private int   eightMer = -1;
+    private float kdA1 = Guide.SEEDLESSKD;
+    private float kdB1 = Guide.SEEDLESSKD;
+
+    public int   get8mer() { return this.eightMer; }
+    public float getKdB1() { return this.kdB1; }
+    public float getKdA1() { return this.kdA1; }
+
+    // constructor
+    // target is a 8mer
+    public EightMerDuplex( int target, float kdA1, float kdB1 ) {
+	this.eightMer = target; // save the target site
+	this.kdA1 = kdA1;
+	this.kdB1 = kdB1;
+    }
+
+    @Override
+    public String toString() {
+	return
+	    this.eightMer + ", KdB1 = " + this.kdB1 + ", KdA1 = " + this.kdA1;
+    }
+}
