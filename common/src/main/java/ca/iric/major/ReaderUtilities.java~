@@ -1,9 +1,0 @@
-package ca.iric.major.mirbooking.reader;
-
-public class ReaderUtilities {
-
-    protected static void processException( Throwable e, String fileName ) {
-	System.out.println( "Something's wrong while reading " + fileName + "!" );
-	e.printStackTrace();
-    }
-}
