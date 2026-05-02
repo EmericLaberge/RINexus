@@ -1,41 +1,41 @@
-# Modifications nécessaires pour compiler RINexus
+# Modifications Required to Compile RINexus
 
-> **Auteure du document** : Emeric Laberge
-> **Date** : 2 mai 2026
-> **Repo original** : [`major-lab/RINexus`](https://github.com/major-lab/RINexus) (François Major, IRIC, Université de Montréal)
-> **Fork fonctionnel** : [`EmericLaberge/RINexus`](https://github.com/EmericLaberge/RINexus)
-
----
-
-## Contexte
-
-Le repo `major-lab/RINexus` contient le code source Java pour RIMap-RISC et RINets, des outils de prédiction d'interactions RNA. Cependant, **le repo ne compile pas tel quel** après un `git clone`. Ce document détaille chaque problème rencontré et la correction appliquée.
+> **Author** : Emeric Laberge
+> **Date** : May 2, 2026
+> **Original repo** : [`major-lab/RINexus`](https://github.com/major-lab/RINexus) (François Major, IRIC, Université de Montréal)
+> **Working fork** : [`EmericLaberge/RINexus`](https://github.com/EmericLaberge/RINexus)
 
 ---
 
-## État initial du repo (après `git clone`)
+## Context
+
+The `major-lab/RINexus` repository contains the Java source code for RIMap-RISC and RINets, RNA interaction prediction tools. However, **the repository does not compile as-is** after a `git clone`. This document details every issue encountered and the fix applied.
+
+---
+
+## Initial Repository State (after `git clone`)
 
 ```
 RINexus/
 ├── .gitignore
 ├── LICENSE
-├── README.md          # Contient seulement "# RINexus\nRepository for RIMaps and RINets"
+├── README.md          # Only contains "# RINexus\nRepository for RIMaps and RINets"
 └── src/
     └── main/java/
         └── ca/iric/major/
-            ├── common/         # 70+ fichiers Java (coeur du projet)
-            └── rinexus/rimaprisc/  # 15 fichiers Java (API web + scan)
+            ├── common/             # 70+ Java files (core project)
+            └── rinexus/rimaprisc/  # 15 Java files (web API + scan)
 ```
 
-- **85 fichiers `.java`**
-- **Aucun `pom.xml`** à la racine
-- **Aucun système de build** fonctionnel
+- **85 `.java` files**
+- **No `pom.xml`** at the root
+- **No functional build system**
 
 ---
 
-## Erreur #1 — Aucun fichier de build (`pom.xml` absent)
+## Issue #1 — No Build File (`pom.xml` missing)
 
-### Symptôme
+### Symptom
 
 ```
 $ mvn compile
@@ -44,9 +44,9 @@ is no POM in this directory. Please verify you invoked Maven from the
 correct directory.
 ```
 
-### Cause
+### Root Cause
 
-Le repo original ne contient aucun `pom.xml`. L'historique Git montre qu'un `common/pom.xml` existait dans un commit antérieur, mais il a été supprimé lors de la réorganisation du repo. Ce POM original référençait un parent Maven inaccessible :
+The original repository does not contain any `pom.xml`. The Git history shows that a `common/pom.xml` existed in an earlier commit, but it was deleted during a repository restructuring. This original POM referenced an unreachable Maven parent:
 
 ```xml
 <parent>
@@ -56,11 +56,11 @@ Le repo original ne contient aucun `pom.xml`. L'historique Git montre qu'un `com
 </parent>
 ```
 
-Le POM parent `ca.iric.major:projects:1.0` est un POM local de François Major qui n'est pas publié sur Maven Central ni sur aucun dépôt public. Il est donc **impossible de compiler le projet avec le POM original**, même si on le récupère depuis l'historique Git.
+The parent POM `ca.iric.major:projects:1.0` is a local POM belonging to François Major that is not published on Maven Central or any public repository. It is therefore **impossible to compile the project with the original POM**, even if recovered from the Git history.
 
-### Correction
+### Fix
 
-Créer un `pom.xml` autonome, sans parent inaccessible. Le POM original listait déjà certaines dépendances (`jackson-databind`, `commons-csv`, `commons-io`, `commons-codec`), mais le code Java utilise aussi **Spring Boot** et **Lombok** (non listés dans le POM original).
+Create a standalone `pom.xml` with no unreachable parent. The original POM already listed some dependencies (`jackson-databind`, `commons-csv`, `commons-io`, `commons-codec`), but the Java code also uses **Spring Boot** and **Lombok** (not listed in the original POM).
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -90,7 +90,7 @@ Créer un `pom.xml` autonome, sans parent inaccessible. Le POM original listait 
     </properties>
 
     <dependencies>
-        <!-- Dépendances du POM original -->
+        <!-- Dependencies from the original POM -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
@@ -110,12 +110,12 @@ Créer un `pom.xml` autonome, sans parent inaccessible. Le POM original listait 
             <artifactId>commons-codec</artifactId>
             <version>1.17.1</version>
         </dependency>
-        <!-- Spring Boot (nécessaire pour rimaprisc/) -->
+        <!-- Spring Boot (required by rimaprisc/) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-        <!-- Lombok (nécessaire pour RISCScanRequest.java) -->
+        <!-- Lombok (required by RISCScanRequest.java) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -126,24 +126,24 @@ Créer un `pom.xml` autonome, sans parent inaccessible. Le POM original listait 
 </project>
 ```
 
-**Changements clés par rapport au POM original :**
+**Key changes from the original POM:**
 
-| Élément | POM original (inaccessible) | Nouveau POM |
-|---------|---------------------------|-------------|
-| Parent | `ca.iric.major:projects:1.0` (introuvable) | `spring-boot-starter-parent:3.2.0` |
-| `artifactId` | `common` (sous-module) | `RINexus` (projet standalone) |
-| `packaging` | non spécifié | `jar` |
+| Element | Original POM (unreachable) | New POM |
+|---------|---------------------------|---------|
+| Parent | `ca.iric.major:projects:1.0` (unresolvable) | `spring-boot-starter-parent:3.2.0` |
+| `artifactId` | `common` (sub-module) | `RINexus` (standalone project) |
+| `packaging` | not specified | `jar` |
 | Spring Boot | absent | `spring-boot-starter-web` |
 | Lombok | absent | `1.18.30` (provided) |
-| `<build>` | absent | hérité de Spring Boot parent |
+| `<build>` | absent | inherited from Spring Boot parent |
 
 ---
 
-## Erreur #2 — Dépendances Spring Boot manquantes
+## Issue #2 — Missing Spring Boot Dependencies
 
-### Symptôme
+### Symptom
 
-Même après création d'un `pom.xml` minimal (sans Spring Boot), la compilation échoue avec **~40 erreurs** :
+Even after creating a minimal `pom.xml` (without Spring Boot), compilation fails with **~40 errors**:
 
 ```
 [ERROR] package org.springframework.boot does not exist
@@ -160,26 +160,26 @@ Même après création d'un `pom.xml` minimal (sans Spring Boot), la compilation
 ...
 ```
 
-### Cause
+### Root Cause
 
-Les fichiers suivants dans `rimaprisc/` utilisent Spring Boot mais cette dépendance n'était pas dans le POM original :
+The following files in `rimaprisc/` use Spring Boot, but this dependency was not in the original POM:
 
-| Fichier | Annotations Spring utilisées |
-|---------|------------------------------|
+| File | Spring annotations used |
+|------|-------------------------|
 | `RIMapRISC.java` | `@SpringBootApplication` |
 | `RISCScanController.java` | `@RestController`, `@RequestMapping`, `@PostMapping`, `@RequestBody`, `@CrossOrigin`, `ResponseEntity` |
 | `TranscriptController.java` | `@RestController`, `@GetMapping` |
 | `WebConfig.java` | `@Configuration`, `@Bean`, `WebMvcConfigurer`, `CorsRegistry` |
 
-### Correction
+### Fix
 
-Ajout de `spring-boot-starter-web` comme dépendance dans le `pom.xml` (voir correction #1).
+Add `spring-boot-starter-web` as a dependency in `pom.xml` (see fix #1).
 
 ---
 
-## Erreur #3 — Lombok manquant
+## Issue #3 — Missing Lombok Dependency
 
-### Symptôme
+### Symptom
 
 ```
 [ERROR] package lombok does not exist
@@ -188,13 +188,13 @@ Ajout de `spring-boot-starter-web` comme dépendance dans le `pom.xml` (voir cor
 [ERROR] cannot find symbol: class NoArgsConstructor
 ```
 
-### Cause
+### Root Cause
 
-`RISCScanRequest.java` utilise les annotations Lombok (`@Getter`, `@Setter`, `@NoArgsConstructor`) pour générer automatiquement les getters/setters/constructeur, mais Lombok n'est pas listé comme dépendance.
+`RISCScanRequest.java` uses Lombok annotations (`@Getter`, `@Setter`, `@NoArgsConstructor`) to auto-generate getters, setters, and a no-arg constructor, but Lombok is not listed as a dependency.
 
-### Correction
+### Fix
 
-Ajout de Lombok en scope `provided` dans le `pom.xml` :
+Add Lombok with `provided` scope in `pom.xml`:
 
 ```xml
 <dependency>
@@ -207,9 +207,9 @@ Ajout de Lombok en scope `provided` dans le `pom.xml` :
 
 ---
 
-## Erreur #4 — Classes `ca.iric.major.tools` manquantes
+## Issue #4 — Missing `ca.iric.major.tools` Classes
 
-### Symptôme
+### Symptom
 
 ```
 [ERROR] package ca.iric.major.tools does not exist
@@ -217,18 +217,18 @@ Ajout de Lombok en scope `provided` dans le `pom.xml` :
 [ERROR] cannot find symbol: variable SeedToEightMerCache
 ```
 
-### Cause
+### Root Cause
 
-Deux classes sont référencées par le code existant mais **absentes du repo GitHub** :
+Two classes are referenced by existing code but **absent from the GitHub repository**:
 
-- `EightMerDuplex.java` importe `ca.iric.major.tools.SeedDuplexCache`
-- `SeedDuplex.java` importe `ca.iric.major.tools.SeedToEightMerCache`
+- `EightMerDuplex.java` imports `ca.iric.major.tools.SeedDuplexCache`
+- `SeedDuplex.java` imports `ca.iric.major.tools.SeedToEightMerCache`
 
-Le package `ca.iric.major.tools` n'existe pas dans le repo.
+The `ca.iric.major.tools` package does not exist in the repository.
 
-### Correction
+### Fix
 
-Créer le répertoire et les deux classes :
+Create the directory and both classes:
 
 ```
 src/main/java/ca/iric/major/tools/
@@ -236,13 +236,13 @@ src/main/java/ca/iric/major/tools/
 └── SeedToEightMerCache.java
 ```
 
-**`SeedToEightMerCache.java`** — Encode/décode des 7-mers RNA en binaire compact (2 bits/base) :
+**`SeedToEightMerCache.java`** — Encodes/decodes RNA 7-mers into compact binary (2 bits/base):
 
 ```java
 package ca.iric.major.tools;
 
 public class SeedToEightMerCache {
-    // A=0, C=1, G=2, U=3 — 7mer = 14 bits, tient dans un int
+    // A=0, C=1, G=2, U=3 — 7mer = 14 bits, fits in an int
     public static int encode7mer(String seed) {
         int encoded = 0;
         for (char c : seed.toCharArray()) {
@@ -273,13 +273,13 @@ public class SeedToEightMerCache {
 }
 ```
 
-**`SeedDuplexCache.java`** — Décode des 8-mers :
+**`SeedDuplexCache.java`** — Decodes RNA 8-mers:
 
 ```java
 package ca.iric.major.tools;
 
 public class SeedDuplexCache {
-    // A=0, C=1, G=2, U=3 — 8mer = 16 bits, tient dans un int
+    // A=0, C=1, G=2, U=3 — 8mer = 16 bits, fits in an int
     public static String decode8mer(int encoded) {
         StringBuilder sb = new StringBuilder(8);
         for (int i = 7; i >= 0; i--) {
@@ -298,22 +298,22 @@ public class SeedDuplexCache {
 
 ---
 
-## Résumé des modifications
+## Summary of Changes
 
-| # | Problème | Fichiers concernés | Action |
-|---|----------|--------------------|--------|
-| 1 | Aucun `pom.xml` / parent POM inaccessible | — | Créer un `pom.xml` standalone avec `spring-boot-starter-parent` |
-| 2 | Spring Boot non résolu | `RIMapRISC`, `RISCScanController`, `TranscriptController`, `WebConfig` | Ajouter `spring-boot-starter-web` |
-| 3 | Lombok non résolu | `RISCScanRequest` | Ajouter `lombok` en scope `provided` |
-| 4 | Package `tools` manquant | `EightMerDuplex`, `SeedDuplex` | Créer `SeedToEightMerCache.java` et `SeedDuplexCache.java` |
+| # | Issue | Files Affected | Fix |
+|---|-------|----------------|-----|
+| 1 | No `pom.xml` / unreachable parent POM | — | Create standalone `pom.xml` with `spring-boot-starter-parent` |
+| 2 | Spring Boot unresolved | `RIMapRISC`, `RISCScanController`, `TranscriptController`, `WebConfig` | Add `spring-boot-starter-web` |
+| 3 | Lombok unresolved | `RISCScanRequest` | Add `lombok` with `provided` scope |
+| 4 | Missing `tools` package | `EightMerDuplex`, `SeedDuplex` | Create `SeedToEightMerCache.java` and `SeedDuplexCache.java` |
 
-**Total : 1 fichier modifié (`pom.xml` créé) + 2 fichiers créés. Aucun fichier `.java` existant n'a été modifié.**
+**Total: 1 file modified (`pom.xml` created) + 2 files created. No existing `.java` files were modified.**
 
 ---
 
-## Vérification
+## Verification
 
-Après application des corrections :
+After applying all fixes:
 
 ```bash
 $ mvn compile
@@ -321,16 +321,16 @@ $ mvn compile
 [INFO] Compiling 87 source files
 
 $ mvn exec:java -Dexec.mainClass="ca.iric.major.common.CommonKmers"
-# → Exécute correctement, affiche les k-mers communs
+# → Runs correctly, displays common k-mers
 ```
 
 ---
 
-## Fork fonctionnel
+## Working Fork
 
-Le repo forké avec toutes les corrections appliquées est disponible ici :
+The forked repository with all fixes applied is available at:
 **https://github.com/EmericLaberge/RINexus**
 
 ---
 
-*English version : [`BUILD_FIXES_EN.md`](BUILD_FIXES_EN.md)*
+*Version française : [`BUILD_FIXES.md`](BUILD_FIXES.md)*
