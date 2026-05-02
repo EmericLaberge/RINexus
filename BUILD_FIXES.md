@@ -1,6 +1,6 @@
 # Modifications nécessaires pour compiler RINexus
 
-> **Auteure du document** : Emeric Laberge
+> **Auteur** : Emeric Laberge
 > **Date** : 2 mai 2026
 > **Repo original** : [`major-lab/RINexus`](https://github.com/major-lab/RINexus) (François Major, IRIC, Université de Montréal)
 > **Fork fonctionnel** : [`EmericLaberge/RINexus`](https://github.com/EmericLaberge/RINexus)
@@ -23,7 +23,7 @@ RINexus/
 └── src/
     └── main/java/
         └── ca/iric/major/
-            ├── common/         # 70+ fichiers Java (coeur du projet)
+            ├── common/         # 70+ fichiers Java (cœur du projet)
             └── rinexus/rimaprisc/  # 15 fichiers Java (API web + scan)
 ```
 
